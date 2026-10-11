@@ -17,10 +17,10 @@
    ===================================================================== */
 const CONFIG = {
   api:   "",                        // URL Web App Google Apps Script. Kosong = mode lokal.
-  situs: "emasvio.my.id",     // alamat web, ditampilkan di gambar story
-  wa:    "6285821111357",            // nomor WhatsApp Business, format 62..., tanpa + dan spasi
+  situs: "emasvio.my.id",            // alamat web, ditampilkan di gambar story
+  wa:    "62XXXXXXXXXX",            // nomor WhatsApp Business, format 62..., tanpa + dan spasi
   ig:    "emas_vio",
-  area:  "Jakarta Selatan · Kendal–Semarang",
+  area:  "Jakarta Selatan · Boja–Kendal–Semarang",
   tagJual: "#jualemas",
   tagBeli: "#beliemas",
   pixelId: "",                       // Meta Pixel ID (opsional) → event Lead saat klik WhatsApp
@@ -314,6 +314,11 @@ td.left{text-align:left}
       <div class="card">
         <h2>Harga hari ini</h2>
         <p class="hint" id="priceInfo"></p>
+        <div class="field">
+          <label for="pastePrice">Isi dari halaman Antam</label>
+          <p class="hint">Buka <a href="https://www.logammulia.com/id/harga-emas-hari-ini" target="_blank" rel="noopener">halaman harga</a> dan <a href="https://www.logammulia.com/id/sell/gold" target="_blank" rel="noopener">halaman buyback</a> Antam → pilih semua teks → salin → tempel di sini (boleh dua-duanya bergantian). Angka di bawah terisi sendiri.</p>
+          <textarea id="pastePrice" placeholder="Tempel teks halaman logammulia.com di sini"></textarea>
+        </div>
         <div class="grid">
           <div class="field"><label for="pTanggal">Tanggal</label><input id="pTanggal" type="date"></div>
           <div class="field"><label for="pBuyback">Buyback Antam / gram</label><input id="pBuyback" type="number" inputmode="numeric"></div>
@@ -471,6 +476,8 @@ function normPrice(p){
 }
 let price = normPrice(C.hargaCadangan), priceSource = "file";
 async function loadPrice(){
+  // 1) live from Antam via the Vercel function; 2) Google Sheet; 3) hargaCadangan in this file
+  try { const r = await (await fetch("/api/harga")).json(); if (r.ok && +r.price?.buyback_gr > 0) { price = normPrice(r.price); priceSource = "antam"; return; } } catch(e) {}
   if (!API) return;
   try { const r = await apiGet({action:"price"}); if (r.ok && r.price && +r.price.buyback_gr > 0) { price = normPrice(r.price); priceSource = "sheet"; } } catch(e) {}
 }
@@ -554,8 +561,8 @@ const msg = (id, text, ok=true) => { const el=$(id); el.className = "msg " + (ok
 function fillPriceForm(){
   $("pTanggal").value = todayJkt(); $("pBuyback").value = price.buyback_gr || "";
   KEPING.forEach(g => $("pj"+kid(g)).value = price.jual[String(g)] || "");
-  const asal = priceSource === "sheet" ? (price.sumber === "auto" ? "otomatis dari Antam" : "input manual") : "file (mode lokal)";
-  $("priceInfo").textContent = `Harga yang tampil ke pengunjung: ${longDate(price.tanggal)} · ${asal}.` + (API ? " Isi form ini hanya kalau mau mengoreksi atau update otomatis gagal." : " Simpan harga butuh Google Sheet; tanpa itu, ubah hargaCadangan di file.");
+  const isToday = price.tanggal === todayJkt();
+  $("priceInfo").textContent = `Harga yang tampil ke pengunjung: ${longDate(price.tanggal)}` + (priceSource === "antam" ? " · otomatis langsung dari situs Antam" : price.sumber === "auto" ? " · otomatis dari bot VPS" : "") + (isToday ? " (sudah hari ini)." : " — belum diperbarui hari ini.") + (API ? "" : " Simpan harga butuh Google Sheet; tanpa itu, ubah hargaCadangan di file.");
   $("savePrice").disabled = !API;
   const share = Math.round((1 - C.untukPenjual - C.untukPembeli) * 100);
   $("marginInfo").textContent = `Konsumen dapat ${Math.round(C.untukPenjual*100)}% + ${Math.round(C.untukPembeli*100)}% dari selisih harga butik dan buyback. Untungmu ${share}% dari selisih kalau beli dan jual di hari yang sama, belum dipotong biaya.`;
@@ -564,13 +571,42 @@ function renderKepingTable(){
   $("kepingRows").innerHTML = KEPING.map(g => { const m = perKeping(price, g); if(!m) return "";
     return `<tr><td><span class="kp">${gtxt(g)} gr</span></td><td>${rp(m.butik)}</td><td>${rp(m.buyback)}</td><td class="mine">${rp(m.beli)}</td><td class="mine">${rp(m.jual)}</td><td class="${m.margin>0?"pos":"neg"}">${rp(m.margin)}</td></tr>`; }).join("");
 }
+function parseAntam(raw){ // reads prices from text copied off logammulia.com (structure-agnostic)
+  const txt = String(raw).replace(/\s+/g, " "), RP = "(\\d{1,3}(?:[.,]\\d{3}){2,3})", num = v => +v.replace(/[^\d]/g, "");
+  const readJual = sect => { const j = {}; KEPING.forEach(g => {
+    const lab = g === 0.5 ? "0[.,]5" : String(g) + "(?:[.,]0)?";
+    const m = sect.match(new RegExp("(?:^|\\s)" + lab + "\\s*(?:gr|gram)\\b[^\\d]{0,60}?" + RP, "i"));
+    if (m) j[String(g)] = num(m[1]);
+  }); return j; };
+  // "Emas Batangan" also appears in menus; use the occurrence whose following text yields the most prices
+  let best = readJual(txt);
+  for (const m of txt.matchAll(/Emas Batangan(?!\s*(Gift|Batik|Imlek|Selamat))/gi)) {
+    const j = readJual(txt.slice(m.index, m.index + 6000));
+    if (Object.keys(j).length >= Object.keys(best).length) best = j;
+  }
+  const out = { jual: best };
+  const b = txt.match(new RegExp("(?:buyback|harga beli kembali|pembelian kembali)[^\\d]{0,120}?" + RP, "i"));
+  if (b) out.buyback = num(b[1]);
+  return out;
+}
+$("pastePrice").addEventListener("input", () => {
+  const r = parseAntam($("pastePrice").value), got = [];
+  if (r.buyback > 500000) { $("pBuyback").value = r.buyback; got.push("buyback " + rp(r.buyback) + "/gr"); }
+  const ks = Object.keys(r.jual); ks.forEach(k => $("pj"+kid(+k)).value = r.jual[k]);
+  if (ks.length) got.push(ks.length + " harga keping");
+  $("pTanggal").value = todayJkt();
+  const j1 = +$("pj1").value, bb = +$("pBuyback").value;
+  if (!got.length) return msg("priceMsg", "Belum ada harga yang terbaca. Pastikan yang ditempel teks halaman harga atau buyback Antam.", false);
+  if (j1 && bb && !(j1 > bb && j1 < bb * 1.2)) return msg("priceMsg", "Terbaca: " + got.join(", ") + ". Tapi angkanya janggal, cek lagi sebelum disimpan.", false);
+  msg("priceMsg", "Terbaca: " + got.join(", ") + (r.buyback > 500000 ? ". Cek sekilas, lalu Simpan harga." : ". Buyback masih angka lama, tempel juga teks halaman buyback."));
+});
 $("savePrice").addEventListener("click", async () => {
   const p = { tanggal: $("pTanggal").value, buyback_gr: +$("pBuyback").value };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(p.tanggal) || !(p.buyback_gr > 100000)) return msg("priceMsg","Isi tanggal dan buyback per gram (angka penuh, mis. 2376000).", false);
   KEPING.forEach(g => { const v = +$("pj"+kid(g)).value; if (v > 0) p["j"+kid(g)] = v; });
   if (!(p.j1 > p.buyback_gr)) return msg("priceMsg","Harga jual 1 gr harus lebih tinggi dari buyback per gram. Cek lagi angkanya.", false);
   $("savePrice").disabled = true;
-  try { const r = await apiPost({action:"setPrice", price:p}); if(!r.ok) throw new Error(r.error); await loadPrice(); fillPriceForm(); renderKepingTable(); renderKonsumen(); renderStudio(); msg("priceMsg","Harga tersimpan dan sudah tampil ke pengunjung."); }
+  try { const r = await apiPost({action:"setPrice", price:p}); if(!r.ok) throw new Error(r.error); await loadPrice(); fillPriceForm(); renderKepingTable(); renderKonsumen(); renderStudio(); $("pastePrice").value = ""; msg("priceMsg","Harga tersimpan dan sudah tampil ke pengunjung."); }
   catch(err) { msg("priceMsg","Gagal menyimpan: "+err.message, false); }
   finally { $("savePrice").disabled = !API; }
 });
