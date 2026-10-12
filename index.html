@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Emas Vio · Jual & Beli LM Antam</title>
-<meta name="description" content="Hitung harga jual dan beli LM Antam hari ini, lalu lanjutkan lewat WhatsApp. COD aman di Jakarta Selatan dan Boja–Kendal–Semarang.">
+<meta name="description" content="Hitung harga jual dan beli LM Antam hari ini, lalu lanjutkan lewat WhatsApp. COD aman di Jakarta Selatan.">
 <meta property="og:title" content="Emas Vio · Jual & Beli LM Antam">
 <meta property="og:description" content="Cek harga jual dan beli emasmu dalam 5 detik, lalu lanjut via WhatsApp.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,7 +20,7 @@ const CONFIG = {
   situs: "emasvio.my.id",            // alamat web, ditampilkan di gambar story
   wa:    "6285821111357",            // nomor WhatsApp Business, format 62..., tanpa + dan spasi
   ig:    "emas_vio",
-  area:  "Jakarta Selatan · Kendal–Semarang",
+  area:  "Jakarta Selatan",
   tagJual: "#jualemas",
   tagBeli: "#beliemas",
   pixelId: "",                       // Meta Pixel ID (opsional) → event Lead saat klik WhatsApp
@@ -38,9 +38,10 @@ const CONFIG = {
   untukPembeli: 0.35,
   pembulatan:   5000,               // premium & diskon dibulatkan ke atas (menguntungkan konsumen)
 
-  pajakPersen: 1.5,                  // potongan pajak buyback di butik (cek aturan terbaru)
+  pembanding:  "Galeri 24",          // nama toko pembanding yang tampil ke konsumen (sumber harga otomatis /api/harga)
+  pajakPersen: 0,                     // potongan pajak buyback di toko pembanding (0 = tidak dihitung). Butik Antam: 1.5
   pajakDiAtas: 10000000,
-  cairButik:   "H+1 s.d. H+7 hari kerja",
+  cairButik:   "",                    // lama pencairan di toko pembanding, kosong = tidak ditampilkan. Butik Antam: "H+1 s.d. H+7 hari kerja"
 
   // Dipakai kalau Google Sheet belum tersambung / tidak bisa dihubungi
   hargaCadangan: {
@@ -240,8 +241,8 @@ td.left{text-align:left}
       <div class="res" aria-live="polite">
         <span class="who">Kamu terima dari Emas Vio</span>
         <span class="amt" id="jualMe">–</span>
-        <span class="gain" id="jualGain">+<span id="jualGainN"></span> lebih banyak dari butik</span>
-        <div class="vs"><span>Buyback butik<span id="jualTax"></span></span><b id="jualThem">–</b></div>
+        <span class="gain" id="jualGain">+<span id="jualGainN"></span> lebih banyak dari <span class="pbName">butik</span></span>
+        <div class="vs"><span>Buyback <span class="pbName">butik</span><span id="jualTax"></span></span><b id="jualThem">–</b></div>
       </div>
       <a class="cta" id="waJual" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>Jual sekarang via WhatsApp</a>
     </div>
@@ -252,8 +253,8 @@ td.left{text-align:left}
       <div class="res" aria-live="polite">
         <span class="who">Harga di Emas Vio</span>
         <span class="amt" id="beliMe">–</span>
-        <span class="gain" id="beliGain">Hemat <span id="beliGainN"></span> dari harga butik</span>
-        <div class="vs"><span>Harga butik Antam</span><b id="beliThem">–</b></div>
+        <span class="gain" id="beliGain">Hemat <span id="beliGainN"></span> dari harga <span class="pbName">butik</span></span>
+        <div class="vs"><span>Harga <span class="pbName">butik Antam</span></span><b id="beliThem">–</b></div>
       </div>
       <a class="cta" id="waBeli" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.3.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>Pesan via WhatsApp</a>
     </div>
@@ -315,15 +316,15 @@ td.left{text-align:left}
         <h2>Harga hari ini</h2>
         <p class="hint" id="priceInfo"></p>
         <div class="field">
-          <label for="pastePrice">Isi dari halaman Antam</label>
-          <p class="hint">Buka <a href="https://www.logammulia.com/id/harga-emas-hari-ini" target="_blank" rel="noopener">halaman harga</a> dan <a href="https://www.logammulia.com/id/sell/gold" target="_blank" rel="noopener">halaman buyback</a> Antam → pilih semua teks → salin → tempel di sini (boleh dua-duanya bergantian). Angka di bawah terisi sendiri.</p>
-          <textarea id="pastePrice" placeholder="Tempel teks halaman logammulia.com di sini"></textarea>
+          <label for="pastePrice">Isi dari halaman Galeri 24 (cadangan kalau harga otomatis gagal)</label>
+          <p class="hint">Buka <a href="https://galeri24.co.id/harga-emas#ANTAM" target="_blank" rel="noopener">galeri24.co.id/harga-emas</a> → pilih semua teks → salin → tempel di sini. Harga jual semua keping dan buyback terisi sendiri.</p>
+          <textarea id="pastePrice" placeholder="Tempel teks halaman Galeri 24 di sini"></textarea>
         </div>
         <div class="grid">
           <div class="field"><label for="pTanggal">Tanggal</label><input id="pTanggal" type="date"></div>
           <div class="field"><label for="pBuyback">Buyback Antam / gram</label><input id="pBuyback" type="number" inputmode="numeric"></div>
         </div>
-        <h3>Harga jual butik per keping</h3>
+        <h3>Harga jual per keping</h3>
         <div class="grid" id="pJual"></div>
         <div class="btns"><button class="btn" id="savePrice" type="button">Simpan harga</button></div>
         <div class="msg" id="priceMsg" role="status"></div>
@@ -344,7 +345,7 @@ td.left{text-align:left}
       <div class="studio">
         <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
           <div id="optHarian" style="display:flex;flex-direction:column;gap:12px">
-            <p class="hint">Story 9:16 berisi harga emas_vio dibanding butik Antam hari ini. Pilih maksimal 5 keping.</p>
+            <p class="hint">Story 9:16 berisi harga emas_vio dibanding toko pembanding (CONFIG.pembanding) hari ini. Pilih maksimal 5 keping.</p>
             <div class="checks" id="storyKeping"></div>
             <div class="field"><label for="storyIsi">Isi story</label><select id="storyIsi"><option value="both">Harga jual & beli</option><option value="jual">Hanya "Kamu jual ke kami"</option><option value="beli">Hanya "Kamu beli dari kami"</option></select></div>
           </div>
@@ -434,20 +435,22 @@ function replay(el, cls){ if (reduceMotion || !el) return; el.classList.remove(c
 const blank = el => { cancelAnimationFrame(el._raf); el.dataset.v = ""; el.textContent = "–"; };
 const store = { get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d} }, set(k,v){ try{localStorage.setItem(k,JSON.stringify(v))}catch(e){} }, del(k){ try{localStorage.removeItem(k)}catch(e){} } };
 
-/* ---------- money rules: margin = share of today's butik–buyback spread ---------- */
+/* ---------- money rules: margin = share of today's jual–buyback spread at the comparison store ---------- */
+const bbOf = (price, g) => price.bb[String(g)] || price.buyback_gr * g; // per-keping buyback when the source lists it
+const toko = () => C.pembanding || "butik Antam";
 function spread(price, g){
   const exact = price.jual[String(g)];
-  if (exact) return exact - price.buyback_gr * g;
+  if (exact) return exact - bbOf(price, g);
   const ks = KEPING.filter(k => price.jual[String(k)]);
   if (!ks.length) return 0;
   const k = ks.filter(x => x <= g).pop() ?? ks[0];
-  return (price.jual[String(k)] - price.buyback_gr * k) / k * g;
+  return (price.jual[String(k)] - bbOf(price, k)) / k * g;
 }
 const up = n => Math.ceil(Math.max(0, n) / C.pembulatan) * C.pembulatan;
 const premium = (price, g) => up(spread(price, g) * C.untukPenjual);
 const diskon  = (price, g) => up(spread(price, g) * C.untukPembeli);
 function hitungJual(price, g){ // customer sells to us
-  const antam = price.buyback_gr * g;
+  const antam = bbOf(price, g);
   const tax = antam > C.pajakDiAtas ? Math.round(antam * C.pajakPersen / 100) : 0;
   const mine = antam + premium(price, g);
   return { mine, butik: antam - tax, tax, gain: mine - (antam - tax) };
@@ -459,8 +462,8 @@ function hitungBeli(price, g, qty){ // customer buys from us
 }
 function perKeping(price, g){
   const a = price.jual[String(g)]; if (!a) return null;
-  const beli = price.buyback_gr * g + premium(price, g), jual = a - diskon(price, g);
-  return { butik:a, buyback: price.buyback_gr*g, beli, jual, margin: jual - beli };
+  const beli = bbOf(price, g) + premium(price, g), jual = a - diskon(price, g);
+  return { butik:a, buyback: bbOf(price, g), beli, jual, margin: jual - beli };
 }
 window.__emasvio = { spread, premium, diskon, hitungJual, hitungBeli, perKeping, get price(){ return price; } };
 
@@ -471,13 +474,13 @@ async function apiGet(params){ const u = new URL(API); Object.entries(params).fo
 async function apiPost(body){ const r = await fetch(API, {method:"POST", body: JSON.stringify({...body, token})}); if(!r.ok) throw new Error("http "+r.status); return r.json(); }
 function normPrice(p){
   if (!p) return null;
-  const jual = {}; KEPING.forEach(g => { const v = p.jual ? p.jual[String(g)] : p["j"+kid(g)]; if (+v > 0) jual[String(g)] = +v; });
-  return { tanggal: String(p.tanggal).slice(0,10), buyback_gr: +p.buyback_gr, jual, sumber: p.sumber || "file" };
+  const jual = {}, bb = {}; KEPING.forEach(g => { const v = p.jual ? p.jual[String(g)] : p["j"+kid(g)]; if (+v > 0) jual[String(g)] = +v; if (+p["b"+kid(g)] > 0) bb[String(g)] = +p["b"+kid(g)]; });
+  return { tanggal: String(p.tanggal).slice(0,10), buyback_gr: +p.buyback_gr, jual, bb, sumber: p.sumber || "file" };
 }
 let price = normPrice(C.hargaCadangan), priceSource = "file";
 async function loadPrice(){
   // 1) live from Antam via the Vercel function; 2) Google Sheet; 3) hargaCadangan in this file
-  try { const r = await (await fetch("/api/harga")).json(); if (r.ok && +r.price?.buyback_gr > 0) { price = normPrice(r.price); priceSource = "antam"; return; } } catch(e) {}
+  try { const r = await (await fetch("/api/harga")).json(); if (r.ok && +r.price?.buyback_gr > 0) { price = normPrice(r.price); priceSource = "otomatis"; return; } } catch(e) {}
   if (!API) return;
   try { const r = await apiGet({action:"price"}); if (r.ok && r.price && +r.price.buyback_gr > 0) { price = normPrice(r.price); priceSource = "sheet"; } } catch(e) {}
 }
@@ -493,7 +496,7 @@ const srcTag = src ? " #" + src : "";
 const waLink = m => `https://wa.me/${C.wa}?text=${encodeURIComponent(m)}`;
 let mode = "jual", beliG = 5;
 const STEPS = {
-  jual: [["Kirim foto emas lewat WhatsApp","Sebutkan gramasi dan tahun/seri."],["Terima penawaran harga hari ini","Lengkap dengan perbandingan buyback butik."],["COD di tempat publik","Lobi mall, coffee shop, atau ATM setor tunai."],["Cek bareng, dana masuk dulu","Emas diserahkan setelah dana masuk ke rekeningmu."]],
+  jual: [["Kirim foto emas lewat WhatsApp","Sebutkan gramasi dan tahun/seri."],["Terima penawaran harga hari ini","Lengkap dengan perbandingan harga toko lain."],["COD di tempat publik","Lobi mall, coffee shop, atau ATM setor tunai."],["Cek bareng, dana masuk dulu","Emas diserahkan setelah dana masuk ke rekeningmu."]],
   beli: [["Pilih gram lewat WhatsApp","Kami cek stok dan kirim harga hari ini."],["Sepakati harga dan jadwal","COD di tempat publik, atau dikirim berasuransi untuk luar kota."],["Cek bareng saat COD","CertiCard utuh, sinar UV, magnet, nomor seri."],["Bayar saat serah terima","Tidak ada transfer di muka untuk COD."]]
 };
 $("stepsJual").innerHTML = STEPS.jual.map(([b,s]) => `<li><div><b>${b}</b><span>${s}</span></div></li>`).join("");
@@ -503,19 +506,21 @@ function setMode(m){
   $("tabJual").setAttribute("aria-selected", m==="jual"); $("tabBeli").setAttribute("aria-selected", m==="beli");
   $("panelJual").hidden = m!=="jual"; $("panelBeli").hidden = m!=="beli"; $("seg").dataset.mode = m;
   const panel = $(m==="jual" ? "panelJual" : "panelBeli"); panel.style.setProperty("--dx", m==="jual" ? "-14px" : "14px"); replay(panel, "enter");
-  $("heroTitle").textContent = m==="jual" ? "Jual emas Antam tanpa antre" : "Beli LM Antam di bawah harga butik";
+  $("heroTitle").textContent = m==="jual" ? "Jual emas Antam tanpa antre" : `Beli LM Antam di bawah harga ${toko()}`;
   renderKonsumen();
 }
 function renderKonsumen(){
   const dTxt = longDate(price.tanggal);
-  $("priceDate").textContent = `Harga ${dTxt} · buyback Antam ${rp(price.buyback_gr)}/gr`;
+  $("priceDate").textContent = `Harga ${dTxt} · buyback ANTAM di ${toko()} ${rp(bbOf(price,1))}/gr`;
+  document.querySelectorAll(".pbName").forEach(el => el.textContent = toko());
   $("staleNote").hidden = (Date.now() - new Date(price.tanggal+"T00:00:00+07:00").getTime())/864e5 <= 3;
   const g = parseFloat(String($("gramJual").value).replace(",", "."));
   document.querySelectorAll("#chipsJual .chip").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.g === g)));
   if (g > 0) {
     const r = hitungJual(price, g);
     money($("jualMe"), r.mine); money($("jualThem"), r.butik);
-    $("jualTax").textContent = r.tax ? " · dipotong pajak, cair beberapa hari" : " · cair beberapa hari";
+    const notes = [r.tax ? "dipotong pajak" : "", C.cairButik ? "cair " + C.cairButik : ""].filter(Boolean);
+    $("jualTax").textContent = notes.length ? " · " + notes.join(", ") : "";
     $("jualGain").hidden = !(r.gain > 0); money($("jualGainN"), r.gain);
     $("waJual").href = waLink(`Halo Emas Vio, saya mau jual LM Antam ${gtxt(g)} gr. Estimasi di website ${rp(r.mine)} (harga ${dTxt}). Mohon dibantu prosesnya. ${C.tagJual}${srcTag}`);
   } else { blank($("jualMe")); blank($("jualThem")); $("jualGain").hidden = true; }
@@ -562,7 +567,7 @@ function fillPriceForm(){
   $("pTanggal").value = todayJkt(); $("pBuyback").value = price.buyback_gr || "";
   KEPING.forEach(g => $("pj"+kid(g)).value = price.jual[String(g)] || "");
   const isToday = price.tanggal === todayJkt();
-  $("priceInfo").textContent = `Harga yang tampil ke pengunjung: ${longDate(price.tanggal)}` + (priceSource === "antam" ? " · otomatis langsung dari situs Antam" : price.sumber === "auto" ? " · otomatis dari bot VPS" : "") + (isToday ? " (sudah hari ini)." : " — belum diperbarui hari ini.") + (API ? "" : " Simpan harga butuh Google Sheet; tanpa itu, ubah hargaCadangan di file.");
+  $("priceInfo").textContent = `Harga yang tampil ke pengunjung: ${longDate(price.tanggal)}` + (priceSource === "otomatis" ? ` · otomatis dari ${toko()}` : price.sumber === "auto" ? " · otomatis dari bot VPS" : "") + (isToday ? " (sudah hari ini)." : " — belum diperbarui hari ini.") + (API ? "" : " Simpan harga butuh Google Sheet; tanpa itu, ubah hargaCadangan di file.");
   $("savePrice").disabled = !API;
   const share = Math.round((1 - C.untukPenjual - C.untukPembeli) * 100);
   $("marginInfo").textContent = `Konsumen dapat ${Math.round(C.untukPenjual*100)}% + ${Math.round(C.untukPembeli*100)}% dari selisih harga butik dan buyback. Untungmu ${share}% dari selisih kalau beli dan jual di hari yang sama, belum dipotong biaya.`;
@@ -571,8 +576,15 @@ function renderKepingTable(){
   $("kepingRows").innerHTML = KEPING.map(g => { const m = perKeping(price, g); if(!m) return "";
     return `<tr><td><span class="kp">${gtxt(g)} gr</span></td><td>${rp(m.butik)}</td><td>${rp(m.buyback)}</td><td class="mine">${rp(m.beli)}</td><td class="mine">${rp(m.jual)}</td><td class="${m.margin>0?"pos":"neg"}">${rp(m.margin)}</td></tr>`; }).join("");
 }
-function parseAntam(raw){ // reads prices from text copied off logammulia.com (structure-agnostic)
+function parseAntam(raw){ // reads prices from text copied off galeri24.co.id (preferred) or logammulia.com
   const txt = String(raw).replace(/\s+/g, " "), RP = "(\\d{1,3}(?:[.,]\\d{3}){2,3})", num = v => +v.replace(/[^\d]/g, "");
+  const g24 = txt.search(/Harga ANTAM\s+Berat/i); // Galeri 24: "Harga ANTAM Berat Harga Jual Harga Buyback 0.5 Rp.. Rp.. 1 Rp.. Rp.."
+  if (g24 >= 0) {
+    const rest = txt.slice(g24 + 11), end = rest.search(/Diperbarui|Harga (?!Jual|Buyback)[A-Z]/i), sect = end > 0 ? rest.slice(0, end) : rest.slice(0, 4000), out = { jual:{} };
+    KEPING.forEach(g => { const m = sect.match(new RegExp("(?:^|\\s)" + (g === 0.5 ? "0[.,]5" : String(g)) + "\\s+Rp\\s?([\\d.,]+)\\s+Rp\\s?([\\d.,]+)"));
+      if (m) { out.jual[String(g)] = num(m[1]); if (g === 1) out.buyback = num(m[2]); } });
+    return out;
+  }
   const readJual = sect => { const j = {}; KEPING.forEach(g => {
     const lab = g === 0.5 ? "0[.,]5" : String(g) + "(?:[.,]0)?";
     const m = sect.match(new RegExp("(?:^|\\s)" + lab + "\\s*(?:gr|gram)\\b[^\\d]{0,60}?" + RP, "i"));
@@ -650,7 +662,7 @@ function footer(ctx, W, H, note){
 function drawHarian(ctx){
   const W = 1080, H = 1920; ctx.canvas.width = W; ctx.canvas.height = H;
   header(ctx, W, "HARGA EMAS", "HARI INI");
-  ctx.fillStyle = K.muted; ctx.font = `500 30px ${FB}`; ctx.fillText("LM Antam per keping · emas_vio vs butik Antam", 72, 410);
+  ctx.fillStyle = K.muted; ctx.font = `500 30px ${FB}`; ctx.fillText(`LM Antam per keping · emas_vio vs ${toko()}`, 72, 410);
   const ks = storyPick.filter(g => price.jual[String(g)]).sort((a,b)=>a-b);
   const isi = $("storyIsi").value, blocks = isi === "both" ? ["jual","beli"] : [isi];
   const top = 460, bottom = H - 300, gap = 30;
@@ -661,7 +673,7 @@ function drawHarian(ctx){
     ctx.fillStyle = K.brass; ctx.font = `700 34px ${FD}`; ctx.fillText(kind==="jual" ? "KAMU JUAL KE KAMI" : "KAMU BELI DARI KAMI", 92, y0+62);
     ctx.fillStyle = K.muted; ctx.font = `600 22px ${FB}`;
     const cx1 = 330, cx2 = W-92;
-    ctx.textAlign = "right"; ctx.fillText("EMAS_VIO", cx1+250, y0+104); ctx.fillText(kind==="jual" ? "BUYBACK BUTIK*" : "HARGA BUTIK", cx2, y0+104); ctx.textAlign = "left";
+    ctx.textAlign = "right"; ctx.fillText("EMAS_VIO", cx1+250, y0+104); ctx.fillText(kind==="jual" ? ("BUYBACK " + toko().toUpperCase() + (C.pajakPersen || C.cairButik ? "*" : "")) : ("HARGA " + toko().toUpperCase()), cx2, y0+104); ctx.textAlign = "left";
     const rowH = Math.min(118, (blockH - 130) / Math.max(1, ks.length));
     ks.forEach((g, i) => {
       const y = y0 + 130 + i*rowH;
@@ -678,7 +690,8 @@ function drawHarian(ctx){
       ctx.textAlign = "left";
     });
   });
-  footer(ctx, W, H, `*Buyback butik setelah potongan pajak bila di atas Rp10 jt, cair ${C.cairButik}. Harga berlaku ${longDate(price.tanggal)} dan mengikuti harga Antam harian.`);
+  const fn = [C.pajakPersen ? "setelah potongan pajak bila di atas Rp10 jt" : "", C.cairButik ? "cair " + C.cairButik : ""].filter(Boolean).join(", ");
+  footer(ctx, W, H, (fn ? `*Buyback ${toko()} ${fn}. ` : `Harga pembanding: ANTAM di ${toko()}. `) + `Harga berlaku ${longDate(price.tanggal)} dan berubah setiap hari.`);
   lastName = `story-harga-${price.tanggal}.jpg`;
 }
 function offerData(){
@@ -686,13 +699,13 @@ function offerData(){
   const dTxt = longDate(price.tanggal), label = q>1 ? `${q} × ${gtxt(g)} gr` : `${gtxt(g)} gr`, sapa = nama ? `Halo ${nama},` : "Halo Kak,";
   if (kind === "jual") {
     const me = hitungJual(price, g).mine * q;
-    const antam = price.buyback_gr * g * q, tax = antam > C.pajakDiAtas ? Math.round(antam * C.pajakPersen / 100) : 0, bn = antam - tax; // tax threshold applies to the whole transaction
-    return { title:"PENAWARAN BUYBACK", label, rows:[{who:"Emas Vio", amt:me, sub:"Bersih tanpa potongan · COD di tempat aman", me:true},{who:"Buyback butik Antam", amt:bn, sub:(tax?`Setelah pajak ${String(C.pajakPersen).replace(".",",")}% · `:"")+`cair ${C.cairButik}`}], banner:`Kamu terima ${rp(me-bn)} lebih banyak`,
-      text:`${sapa}\nBerikut penawaran buyback LM Antam ${label} hari ini, ${dTxt}:\n\n• Jual ke Emas Vio: ${rp(me)}\n  Bersih, dibayar saat COD di tempat aman.\n• Buyback di butik Antam: ${rp(bn)}\n  ${tax?`Setelah potongan pajak ${rp(tax)}, `:""}cair ${C.cairButik}.\n\nKakak terima ${rp(me-bn)} lebih banyak lewat kami. Harga berlaku hari ini dan mengikuti harga Antam harian.\nMau dijadwalkan COD di mana, Kak?\n\n@${C.ig}\n${C.tagJual}` };
+    const antam = bbOf(price, g) * q, tax = antam > C.pajakDiAtas ? Math.round(antam * C.pajakPersen / 100) : 0, bn = antam - tax; // tax threshold applies to the whole transaction
+    return { title:"PENAWARAN BUYBACK", label, rows:[{who:"Emas Vio", amt:me, sub:"Bersih tanpa potongan · COD di tempat aman", me:true},{who:`Buyback ${toko()}`, amt:bn, sub:[tax?`Setelah pajak ${String(C.pajakPersen).replace(".",",")}%`:"", C.cairButik?`cair ${C.cairButik}`:"", "harga ANTAM hari ini"].filter(Boolean).join(" · ")}], banner:`Kamu terima ${rp(me-bn)} lebih banyak`,
+      text:`${sapa}\nBerikut penawaran buyback LM Antam ${label} hari ini, ${dTxt}:\n\n• Jual ke Emas Vio: ${rp(me)}\n  Bersih, dibayar saat COD di tempat aman.\n• Buyback di ${toko()}: ${rp(bn)}${tax?`\n  Setelah potongan pajak ${rp(tax)}.`:""}${C.cairButik?`\n  Cair ${C.cairButik}.`:""}\n\nKakak terima ${rp(me-bn)} lebih banyak lewat kami. Harga berlaku hari ini dan mengikuti harga Antam harian.\nMau dijadwalkan COD di mana, Kak?\n\n@${C.ig}\n${C.tagJual}` };
   }
   const r = hitungBeli(price, g, q); if (!r) return null;
-  return { title:"PENAWARAN HARGA LM", label, rows:[{who:"Emas Vio", amt:r.mine, sub:"LM Antam asli · dicek bersama saat COD", me:true},{who:"Butik Antam", amt:r.butik, sub:"Harga dasar, belum termasuk pajak pembelian"}], banner:`Kamu hemat ${rp(r.gain)}`,
-    text:`${sapa}\nBerikut penawaran LM Antam ${label} hari ini, ${dTxt}:\n\n• Harga Emas Vio: ${rp(r.mine)}\n  Asli, dicek bersama saat COD (CertiCard utuh, cek UV).\n• Harga di butik Antam: ${rp(r.butik)}\n  Belum termasuk pajak pembelian.\n\nKakak hemat ${rp(r.gain)}. Harga berlaku hari ini, stok terbatas.\nMau saya amankan untuk Kakak?\n\n@${C.ig}\n${C.tagBeli}` };
+  return { title:"PENAWARAN HARGA LM", label, rows:[{who:"Emas Vio", amt:r.mine, sub:"LM Antam asli · dicek bersama saat COD", me:true},{who:`Harga ${toko()}`, amt:r.butik, sub:"Harga jual ANTAM hari ini"}], banner:`Kamu hemat ${rp(r.gain)}`,
+    text:`${sapa}\nBerikut penawaran LM Antam ${label} hari ini, ${dTxt}:\n\n• Harga Emas Vio: ${rp(r.mine)}\n  Asli, dicek bersama saat COD (CertiCard utuh, cek UV).\n• Harga di ${toko()}: ${rp(r.butik)}\n\nKakak hemat ${rp(r.gain)}. Harga berlaku hari ini, stok terbatas.\nMau saya amankan untuk Kakak?\n\n@${C.ig}\n${C.tagBeli}` };
 }
 function drawPenawaran(ctx){
   const o = offerData(); if (!o) { $("ofText").value = ""; return false; }
@@ -720,7 +733,7 @@ async function renderStudio(){
   try { await Promise.all([document.fonts.load(`700 40px "Barlow Condensed"`), document.fonts.load(`600 20px "Plus Jakarta Sans"`)]); } catch(e) {}
   const cv = $("cv"), ctx = cv.getContext("2d");
   const ok = studio === "harian" ? (drawHarian(ctx), true) : drawPenawaran(ctx);
-  if (!ok) { $("studioImg").removeAttribute("src"); return msg("studioMsg","Harga butik untuk keping ini belum ada.", false); }
+  if (!ok) { $("studioImg").removeAttribute("src"); return msg("studioMsg","Harga untuk keping ini belum ada.", false); }
   $("studioImg").src = cv.toDataURL("image/jpeg", .9);
   lastBlob = await new Promise(r => cv.toBlob(r, "image/jpeg", .92));
 }
@@ -749,7 +762,7 @@ function renderTxPreview(){ const t = readTx(), u = untung(t);
 ["tGram","tKeping","tBeli","tJual","tBiaya","tJenis"].forEach(id => $(id).addEventListener("input", renderTxPreview));
 $("fillToday").addEventListener("click", () => {
   const g = +$("tGram").value, q = Math.max(1, parseInt($("tKeping").value,10)||1), m = perKeping(price, g);
-  $("tBeli").value = (price.buyback_gr*g + premium(price,g))*q;
+  $("tBeli").value = (bbOf(price,g) + premium(price,g))*q;
   if (!/Beli dari klien/.test($("tJenis").value)) $("tJual").value = m ? m.jual*q : "";
   renderTxPreview();
 });
